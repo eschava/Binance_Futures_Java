@@ -1,5 +1,6 @@
 package com.binance.client;
 
+import java.util.Collection;
 import java.util.List;
 
 import com.binance.client.impl.BinanceApiInternalFactory;
@@ -145,6 +146,19 @@ public interface SubscriptionClient {
      *                     or error happen between client and Binance server.
      */
     void subscribeSymbolBookTickerEvent(String symbol,
+            SubscriptionListener<SymbolBookTickerEvent> callback, SubscriptionErrorHandler errorHandler);
+
+    /**
+     * Subscribe collection of symbols for book ticker events. If book ticker for any symbol from collection is updated,
+     * server will send the data to client and onReceive in callback will be called.
+     *
+     * @param symbols      Collection of symbols, like "btcusdt".
+     * @param callback     The implementation is required. onReceive will be called
+     *                     if receive server's update.
+     * @param errorHandler The error handler will be called if subscription failed
+     *                     or error happen between client and Binance server.
+     */
+    void subscribeSymbolsBookTickerEvent(Collection<String> symbols,
             SubscriptionListener<SymbolBookTickerEvent> callback, SubscriptionErrorHandler errorHandler);
 
     /**

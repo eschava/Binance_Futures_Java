@@ -1,6 +1,7 @@
 package com.binance.client.impl;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -250,15 +251,15 @@ class WebsocketRequestImpl {
         return request;
     }
 
-    WebsocketRequest<SymbolBookTickerEvent> subscribeSymbolBookTickerEvent(String symbol,
+    WebsocketRequest<SymbolBookTickerEvent> subscribeSymbolsBookTickerEvent(Collection<String> symbols,
             SubscriptionListener<SymbolBookTickerEvent> subscriptionListener,
             SubscriptionErrorHandler errorHandler) {
         InputChecker.checker()
-                .shouldNotNull(symbol, "symbol")
+                .shouldNotNull(symbols, "symbol")
                 .shouldNotNull(subscriptionListener, "listener");
         WebsocketRequest<SymbolBookTickerEvent> request = new WebsocketRequest<>(subscriptionListener, errorHandler);
-        request.name = "***Individual Symbol Book Ticker for " + symbol + "***"; 
-        request.connectionHandler = (connection) -> connection.send(Channels.bookTickerChannel(symbol));
+        request.name = "***Symbol Book Ticker for " + symbols + "***";
+        request.connectionHandler = (connection) -> symbols.forEach(symbol -> connection.send(Channels.bookTickerChannel(symbol)));
 
         request.jsonParser = (jsonWrapper) -> {
             SymbolBookTickerEvent result = new SymbolBookTickerEvent();
