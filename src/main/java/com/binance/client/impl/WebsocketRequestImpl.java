@@ -460,26 +460,32 @@ class WebsocketRequestImpl {
 
         request.jsonParser = (jsonWrapper) -> {
             UserDataUpdateEvent result = new UserDataUpdateEvent();
-            result.setEventType(jsonWrapper.getString("e"));
+            String eventType = jsonWrapper.getString("e");
+            result.setEventType(eventType);
             result.setEventTime(jsonWrapper.getLong("E"));
-            result.setTransactionTime(jsonWrapper.getLong("T"));
+            result.setTransactionTime(jsonWrapper.getLongOrDefault("T", 0));
 
-            if(jsonWrapper.getString("e").equals("ACCOUNT_UPDATE")) {
+            if(eventType.equals("ACCOUNT_UPDATE")) {
                 AccountUpdate accountUpdate = new AccountUpdate();
 
+                JsonWrapper updateData = jsonWrapper.getJsonObject("a");
+                String reason = updateData.getString("m");
+                accountUpdate.setReason(reason);
+
                 List<BalanceUpdate> balanceList = new LinkedList<>();
-                JsonWrapperArray dataArray = jsonWrapper.getJsonObject("a").getJsonArray("B");
+                JsonWrapperArray dataArray = updateData.getJsonArray("B");
                 dataArray.forEach(item -> {
                     BalanceUpdate balance = new BalanceUpdate();
                     balance.setAsset(item.getString("a"));
                     balance.setWalletBalance(item.getBigDecimal("wb"));
+                    balance.setBalanceChange(item.getBigDecimalOrDefault("bc", BigDecimal.ZERO));
                     balanceList.add(balance);
                 });
                 accountUpdate.setBalances(balanceList);
 
                 List<PositionUpdate> positionList = new LinkedList<>();
-                JsonWrapperArray datalist = jsonWrapper.getJsonObject("a").getJsonArray("B");
-                datalist.forEach(item -> {
+                dataArray = updateData.getJsonArray("P");
+                dataArray.forEach(item -> {
                     PositionUpdate position = new PositionUpdate();
                     position.setSymbol(item.getString("s"));
                     position.setAmount(item.getBigDecimal("pa"));
@@ -492,7 +498,7 @@ class WebsocketRequestImpl {
 
                 result.setAccountUpdate(accountUpdate); 
 
-            } else if(jsonWrapper.getString("e").equals("ORDER_TRADE_UPDATE")) {
+            } else if(eventType.equals("ORDER_TRADE_UPDATE")) {
                 OrderUpdate orderUpdate = new OrderUpdate();
                 JsonWrapper jsondata = jsonWrapper.getJsonObject("o");
                 orderUpdate.setSymbol(jsondata.getStringOrDefault("s", ""));
